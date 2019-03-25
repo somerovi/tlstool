@@ -26,7 +26,9 @@ def openssl(args, input=None, env=None):
         stderr=subprocess.PIPE,
         shell=False,
     )
-    stdout, stderr = [s.decode("utf-8").strip() for s in process.communicate(input=input)]
+    stdout, stderr = [
+        s.decode("utf-8").strip() for s in process.communicate(input=input)
+    ]
     logger.debug(f"{stdout} {stderr}")
     if process.returncode != 0:
         raise Exception(f"Error[{process.returncode}]:\n{stdout}\n\n{stderr}")
@@ -100,7 +102,15 @@ def create_certificate(name, conf_file, certs_dir, key_file, key_password, setti
         days = settings.get("days", "7300")
         extensions = settings.get("extensions")
         args = ["req", "-new", "-x509", "-config", conf_file, "-key", key_file]
-        args = args + ["-out", fpath, "-days", f"{days}", f"-{cipher}", "-subj", subject]
+        args = args + [
+            "-out",
+            fpath,
+            "-days",
+            f"{days}",
+            f"-{cipher}",
+            "-subj",
+            subject,
+        ]
         args = args + (["-passin", f"pass:{key_password}"] if key_password else [])
         args = args + (["-extensions", extensions] if extensions else [])
 
@@ -112,7 +122,9 @@ def create_certificate(name, conf_file, certs_dir, key_file, key_password, setti
     return fpath
 
 
-def create_certificate_request(name, conf_file, requests_dir, key_file, key_password, settings):
+def create_certificate_request(
+    name, conf_file, requests_dir, key_file, key_password, settings
+):
     fpath = os.path.join(requests_dir, f"{name}.csr.pem")
     if not os.path.exists(fpath):
         subject = settings["subject"]
@@ -127,7 +139,13 @@ def create_certificate_request(name, conf_file, requests_dir, key_file, key_pass
 
 
 def create_signed_certificate(
-    name, ca_conf_file, ca_cert_file, ca_key_password, certs_dir, requests_file, settings
+    name,
+    ca_conf_file,
+    ca_cert_file,
+    ca_key_password,
+    certs_dir,
+    requests_file,
+    settings,
 ):
     fpath = os.path.join(certs_dir, f"{name}.cert.pem")
     if not os.path.exists(fpath):
@@ -136,32 +154,49 @@ def create_signed_certificate(
         extensions = settings["extensions"]
         args = ["ca", "-batch", "-config", ca_conf_file]
         args = args + ["-extensions", extensions, "-days", f"{days}"]
-        args = args + (["-passin", f"pass:{ca_key_password}"] if ca_key_password else [])
+        args = args + (
+            ["-passin", f"pass:{ca_key_password}"] if ca_key_password else []
+        )
         args = args + ["-notext", "-md", cipher, "-in", requests_file, "-out", fpath]
 
         openssl(args)
         os.chmod(fpath, 0o444)
     openssl(["x509", "-noout", "-text", "-in", fpath])
-    # openssl(['verify', '-CAfile', ca_cert_file, fpath])
 
-    if settings.get("bundle"):
-        chain_fpath = os.path.join(certs_dir, f"{name}-chain.cert.pem")
-        if not os.path.exists(chain_fpath):
-            with open(chain_fpath, "wb") as fobj:
-                for cert_file in [ca_cert_file, fpath]:
-                    with open(cert_file, "rb") as infile:
-                        fobj.write(infile.read())
-            os.chmod(chain_fpath, 0o444)
-        logger.debug(f"Chain file {chain_fpath} created")
-        # openssl(['verify', '-CAfile', chain_fpath, fpath])
     logger.debug(f"Signed certificate {fpath} created")
     return fpath
+
+
+def create_chain_certificate(name, certs_dir, cert_file, ca_or_chain_cert_file):
+    fpath = os.path.join(certs_dir, f"{name}-chain.cert.pem")
+    if not os.path.exists(fpath):
+        with open(fpath, "wb") as fobj:
+            for cf in [cert_file, ca_or_chain_cert_file]:
+                with open(cf, "rb") as infile:
+                    fobj.write(infile.read())
+            os.chmod(fpath, 0o444)
+        logger.debug(f"Chain file {fpath} created")
+    return fpath
+
+
+def verify(cert_file, ca_or_chain_cert_file, int_cert_file=None):
+    args = ["verify", "-CAfile", ca_or_chain_cert_file]
+    args = args + (['-untrusted', int_cert_file] if int_cert_file else [])
+    args = args + [cert_file]
+    openssl(args)
 
 
 class Exporter:
     @classmethod
     def pfx(
-        cls, name, certs_dir, cert_file, key_file, key_password, pfx_password, ca_cert_file=None
+        cls,
+        name,
+        certs_dir,
+        cert_file,
+        key_file,
+        key_password,
+        pfx_password,
+        ca_cert_file=None,
     ):
         """
         openssl pkcs12 -export -in certificate.crt -inkey privatekey.key -out certificate.pfx
@@ -186,7 +221,9 @@ class Exporter:
         """
 
     @classmethod
-    def pkc8(cls, name, certs_dir, cert_file, key_file, key_password, ca_cert_file=None):
+    def pkc8(
+        cls, name, certs_dir, cert_file, key_file, key_password, ca_cert_file=None
+    ):
         """
         openssl pkcs8 -topk8 -inform PEM -outform DER -in filename -out filename -nocrypt
         """
@@ -199,13 +236,18 @@ def build(configuration, templates_dir):
         logger.debug(f"Generating {cert} Certificate")
         settings.setdefault("keys", {})
         settings.setdefault("certs", {})
+        settings.setdefault("chains", {})
         settings.setdefault("requests", {})
 
         settings["dirs"] = initialize_directories(
-            settings["root_dir"], serial=settings.get("serial"), clrnumber=settings.get("clrnumber")
+            settings["root_dir"],
+            serial=settings.get("serial"),
+            clrnumber=settings.get("clrnumber"),
         )
 
-        generate_openssl_config(cert, settings["root_dir"], settings["conf"], templates_dir)
+        generate_openssl_config(
+            cert, settings["root_dir"], settings["conf"], templates_dir
+        )
 
         if settings.get("key"):
             settings["keys"][cert] = create_private_key(
@@ -243,13 +285,35 @@ def build(configuration, templates_dir):
                 settings["requests"][cert],
                 settings["from"],
             )
+            verify(
+                settings["certs"][cert],
+                configuration[ca]["chains"].get(ca, configuration[ca]["certs"][ca])
+            )
+
+        if settings.get("bundle"):
+            ca = settings["from"]["ca"]
+            settings["chains"][cert] = create_chain_certificate(
+                cert,
+                settings["dirs"]["certs"],
+                settings["certs"][cert],
+                configuration[ca]["chains"].get(ca, configuration[ca]["certs"][ca]),
+            )
+            verify(
+                settings["certs"][cert],
+                settings["chains"][cert]
+
+            )
 
         if settings.get("export"):
             for ext in settings["export"]:
                 try:
+                    ca_or_chain_cert_file = None
+                    if settings.get("from"):
+                        ca = settings["from"]["ca"]
+                        ca_or_chain_cert_file = configuration[ca]["chains"].get(
+                            ca, configuration[ca]["certs"][ca]
+                        )
                     exporter = getattr(Exporter, ext)
-                    ca_cert_file = configuration[ca]["certs"][ca] if settings.get("from") else None
-
                     exporter(
                         cert,
                         settings["dirs"]["certs"],
@@ -257,14 +321,16 @@ def build(configuration, templates_dir):
                         settings["keys"][cert],
                         settings["key"].get("password"),
                         settings["export"].get("password"),
-                        ca_cert_file,
+                        ca_or_chain_cert_file,
                     )
                 except AttributeError:
                     logger.error(f"Unsupported export format: ext")
 
 
 def cli():
-    parser = argparse.ArgumentParser(description="TLSTool simplifies generating TLS certs")
+    parser = argparse.ArgumentParser(
+        description="TLSTool simplifies generating TLS certs"
+    )
     parser.add_argument("-c", "--conf", type=str, help="TLSTool config file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose")
     parser.add_argument(

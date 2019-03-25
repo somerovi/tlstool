@@ -1,5 +1,4 @@
 # OpenSSL root CA configuration file.
-# Copy to `/root/ca/openssl.cnf`.
 
 [ ca ]
 # `man ca`
@@ -21,7 +20,7 @@ certificate       = $dir/certs/{{ name }}.cert.pem
 
 # For certificate revocation lists.
 crlnumber         = $dir/crlnumber
-crl               = $dir/crl/ca.crl.pem
+crl               = $dir/crl/{{ name }}.crl.pem
 crl_extensions    = crl_ext
 default_crl_days  = 30
 

@@ -21,9 +21,10 @@ example.com:
 dev.example.com:
   root_dir: "/home/samir/projects/tlstool/example.com/dev.example.com"
 
+  bundle: true
+
   from:
     ca: example.com
-    bundle: true
     cipher: sha256
     days: 7300
     extensions: v3_intermediate_ca
@@ -47,9 +48,10 @@ dev.example.com:
 client.example.com:
   root_dir: "/home/samir/projects/tlstool/example.com/client.example.com"
 
+  bundle: true
+
   from:
     ca: dev.example.com
-    bundle: true
     cipher: sha256
     days: 375
     extensions: usr_cert
@@ -70,9 +72,10 @@ client.example.com:
 server.example.com:
   root_dir: "/home/samir/projects/tlstool/example.com/server.example.com"
 
+  bundle: true
+
   from:
     ca: dev.example.com
-    bundle: true
     cipher: sha256
     days: 375
     extensions: server_cert

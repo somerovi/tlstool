@@ -83,6 +83,11 @@ version: '1'
     days: 7300
     extensions: v3_ca
 
+  # Exporting
+  export:
+    pfx:
+      password: 123456
+
   # For openssl certificate database and revocation
   serial: "1000"
   clrnumber: "1000"
@@ -92,7 +97,6 @@ version: '1'
 
 ## Todos
 
-* Add certificate validation steps
 * Add more formats for exporting
 * Use PyOpenssl for portability
 * Add more options for openssl and openssl config templates
