@@ -38,14 +38,14 @@ version: '1'
 
   root_dir: "</path/where/to/output>"
 
+  # Concatenates certificates into a chain file
+  bundle: true
+
   # Defines how to sign this certificate
   from:
 
     # Specifies the CA that will be used to sign the certificate
     ca: <ca_domain_name>
-
-    # Concatenates certificates into a chain file
-    bundle: true
 
     # Openssl paramters
     cipher: sha256
