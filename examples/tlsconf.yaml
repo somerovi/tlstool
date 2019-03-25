@@ -1,0 +1,116 @@
+version: '1'
+
+example.com:
+  root_dir: "/home/samir/projects/tlstool/example.com"
+
+  serial: "1000"
+  conf:
+    tpl_name: "openssl.conf.tpl"
+
+  key:
+    cipher: aes256
+    bits: 4096
+    password: 91459
+
+  cert:
+    subject: "/C=US/ST=VT/L=Burlington/O=Samir Omerovic/OU=Tech/CN=example.com"
+    cipher: sha256
+    days: 7300
+    extensions: v3_ca
+
+dev.example.com:
+  root_dir: "/home/samir/projects/tlstool/example.com/dev.example.com"
+
+  from:
+    ca: example.com
+    bundle: true
+    cipher: sha256
+    days: 7300
+    extensions: v3_intermediate_ca
+
+  serial: "1000"
+  clrnumber: "1000"
+
+  conf:
+    tpl_name: "int.conf.tpl"
+
+  key:
+    cipher: aes256
+    numbits: 4096
+    password: 91459
+
+  csr:
+    subject: "/C=US/ST=VT/L=Burlington/O=Samir Omerovic/OU=Tech/CN=dev.example.com"
+    cipher: sha256
+
+
+client.example.com:
+  root_dir: "/home/samir/projects/tlstool/example.com/client.example.com"
+
+  from:
+    ca: dev.example.com
+    bundle: true
+    cipher: sha256
+    days: 375
+    extensions: usr_cert
+
+  conf:
+    tpl_name: "int.conf.tpl"
+
+  key:
+    cipher: aes256
+    numbits: 2048
+    password: 123456
+
+  csr:
+    subject: "/C=US/ST=VT/L=Burlington/O=Samir Omerovic/OU=Tech/CN=client.example.com"
+    cipher: sha256
+
+
+##server.example.com:
+##  root_dir: "/home/samir/projects/tlstool/example.com/server.example.com"
+##
+##  from:
+##    ca: dev.example.com
+##    bundle: true
+##    cipher: sha256
+##    days: 375
+##    extensions: server_cert
+##
+##  conf:
+##    tpl_name: "int.conf.tpl"
+##
+##  key:
+##    cipher: aes256
+##    numbits: 2048
+##    password: 123456
+##
+##  csr:
+##    subject: "/C=US/ST=VT/L=Burlington/O=Samir Omerovic/OU=Tech/CN=server.example.com"
+##    cipher: sha256
+##
+##  export:
+##    pfx:
+##      password: 123456
+##
+##client2.example.com:
+##  root_dir: "/home/samir/projects/tlstool/client2.example.com"
+##
+##  serial: "1000"
+##  conf:
+##    tpl_name: "openssl.conf.tpl"
+##
+##  key:
+##    cipher: aes256
+##    numbits: 4096
+##    password: 91459
+##
+##  cert:
+##    subject: "/C=US/ST=VT/L=Burlington/O=Samir Omerovic/OU=Tech/CN=client2.example.com"
+##    cipher: sha256
+##    days: 375
+##    extensions: usr_cert
+##
+##  export:
+##    pfx:
+##
