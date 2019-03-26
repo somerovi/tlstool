@@ -13,8 +13,8 @@ TLSTool simplifies creating certificates using a config file. This tool is based
 * Install from github
   ```bash
   $ python3.6 -m venv venv3 \
-      ./venv3/bin/pip install -U pip \
-      ./venv3/bin/pip install https://github.com/somerovi/tlstool.git@1.0.0
+      && ./venv3/bin/pip install -U pip \
+      && ./venv3/bin/pip install https://github.com/somerovi/tlstool.git@1.0.1
   ```
 
 * Install from PyPi: Not uploaded there yet

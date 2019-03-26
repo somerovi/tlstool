@@ -198,11 +198,6 @@ class Exporter:
         pfx_password,
         ca_cert_file=None,
     ):
-        """
-        openssl pkcs12 -export -in certificate.crt -inkey privatekey.key -out certificate.pfx
-        openssl pkcs12 -export -in certificate.crt -inkey privatekey.key -out certificate.pfx
-            -certfile CAcert.crt
-        """
         fpath = os.path.join(certs_dir, f"{name}.pfx")
         if not os.path.exists(fpath):
             args = ["pkcs12", "-export"]
@@ -212,7 +207,7 @@ class Exporter:
             args = args + (["-certfile", ca_cert_file] if ca_cert_file else [])
             openssl(args)
 
-        logger.debug(f"Exported certificate in PFX format to {fpath}")
+        logger.debug(f"Exported certificate to PFX format: {fpath}")
 
     @classmethod
     def der(cls, name, certs_dir, cert_file, key_file, key_password, ca_cert_file=None):
@@ -320,7 +315,7 @@ def build(configuration, templates_dir):
                         settings["certs"][cert],
                         settings["keys"][cert],
                         settings["key"].get("password"),
-                        settings["export"].get("password"),
+                        settings["export"][ext].get("password"),
                         ca_or_chain_cert_file,
                     )
                 except AttributeError:
